@@ -131,6 +131,19 @@ The converter expects DNAEra exports shaped like:
 Sample Name,SNP Name,Chr,Position,Allele1 - Plus,Allele2 - Plus
 ```
 
+### How the current mapping was built
+
+The current conversion logic was assembled in this order:
+
+1. Read the exact manifest identifier from the DNAEra export header:
+   - `GSAMD-24v3-0-EA_20034606_A1.bpm`
+2. Use the public Illumina `GSA-24v3-0_A1_b151_rsids.txt` file for direct `Name -> rsID` mapping where possible.
+3. Compare that public mapping against the 42 curated SNPs that getbased currently imports.
+4. Fill the getbased-critical gaps with targeted GRCh37 coordinate fallbacks from the NCBI Variation API.
+5. Intentionally omit `rs8175347`, because it is a repeat polymorphism and was not considered safe to reconstruct as a simple SNP call from the public mapping used here.
+
+This means the repo preserves the exact fallback logic that was used to build the current mapping, even though it is still a best-effort bridge rather than an official vendor mapping.
+
 ### Mapping strategy
 
 The converter uses two mapping layers:
@@ -158,6 +171,14 @@ This shape is deliberate:
 - the data body uses tab-separated `rsid chromosome position genotype`
 
 That matches the existing import pattern expected by getbased.
+
+## Current Decision Record
+
+- Scope is intentionally limited to the 42 curated SNPs that getbased currently imports.
+- The converter does not modify getbased and instead emits a format that getbased already accepts.
+- The runtime stays dependency-light and uses built-in Node.js modules only.
+- The current fallback mapping should be replaced if DNAEra provides an official manifest or mapping table.
+- The exact `GSAMD` files discovered later are important future leads, but they are not yet incorporated into the current converter logic because download/preview failed.
 
 ## CLI Usage
 
@@ -239,21 +260,31 @@ Illumina public GSA v3 A1 manifest CSV:
 - page source:
   - `https://support.illumina.com/array/array_kits/infinium-global-screening-array/downloads.html`
 
-### Exact `GSAMD` lead, not downloaded here
+### Exact `GSAMD` lead found later, but not downloaded here
 
-We found a public metadata page referencing the exact DNAEra header identifier:
+We later found exact `GSAMD-24v3-0-EA_20034606_A1` artifacts via 42basepairs, including:
+
+- `GSAMD-24v3-0-EA_20034606_A1.2.0.extended.csv`
+- `GSAMD-24v3-0-EA_20034606_A1.csv`
+- `GSAMD-24v3-0-EA_20034606_A1.2.0.report.txt`
+- `GSAMD-24v3-0-EA_20034606_A1.1.5.extended.csv`
+- `GSAMD-24v3-0-EA_20034606_A1.1.5.report.txt`
+
+We also found a public metadata page referencing the exact DNAEra header identifier:
 
 - https://42basepairs.com/browse/gs/broad-public-datasets/IlluminaGenotypingArrays/metadata/GSAMD-24v3-0-EA_20034606_A1
 
 Why it matters:
 
 - it shows that `GSAMD-24v3-0-EA_20034606_A1` exists as a real metadata object name in a public dataset context
+- it is the most promising future source for improving or replacing the current fallback mapping
 
 Why it is not included in this repo:
 
 - the backing Broad bucket is requester-pays
 - direct object fetch without a billing project returned:
   - `UserProjectMissing`
+- preview/download through 42basepairs also failed for the exact `GSAMD` files we tried
 
 So the exact `GSAMD` custom manifest remains the preferred technical source, but not the artifact currently available in this repo.
 
