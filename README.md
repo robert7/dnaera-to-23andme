@@ -4,6 +4,11 @@ Standalone converter that turns DNAEra raw exports into 23andMe-style raw data f
 
 This project is a best-effort compatibility bridge, not a vendor-certified full-genome transcode. DNAEra does not publicly disclose the rsID mapping layer behind its raw exports, so this repo uses the exact manifest identifier found in the exported file header (`GSAMD-24v3-0-EA_20034606_A1.bpm`) plus public Illumina GSA v3 mapping files and targeted GRCh37 coordinate fallbacks. It is currently designed around the getbased import use case and can recover 41 of the 42 curated SNPs used there; `rs8175347` is intentionally omitted.
 
+Target application:
+
+- getbased app: `https://app.getbased.health/`
+- getbased repository: `https://github.com/elkimek/get-based`
+
 ## Status And Limits
 
 - This repo provides a standalone converter, not changes to getbased or DNAEra.
@@ -22,10 +27,23 @@ This project is a best-effort compatibility bridge, not a vendor-certified full-
 - Preserve useful source metadata from DNAEra exports.
 - Make the mapping assumptions and risks explicit.
 
-Related getbased links:
+## Ask DNAEra
 
-- App: `https://app.getbased.health/`
-- Repository: `https://github.com/elkimek/get-based`
+If you want a cleaner and more reliable conversion path, ask DNAEra support for the underlying mapping data instead of relying on best-effort public reconstruction.
+
+Included in this repo:
+
+- `email-to-dnaera-support-sk.md` - short polite Slovak email template requesting the manifest or mapping table
+
+Recommended request:
+
+- send the text in `email-to-dnaera-support-sk.md` to DNAEra support
+- ask specifically for:
+  - the manifest for the export format they provide
+  - `SNP Name -> rsID` mapping
+  - or `SNP Name / Chr / Position -> rsID` mapping
+
+If DNAEra provides an official mapping table or official compatible export, that should take priority over the fallback mapping strategy used in this repo.
 
 ## What We Found
 
@@ -153,6 +171,7 @@ node convert-dnaera.js path/to/DNAEra-export.txt --mapping mapping/getbased-dnae
 ## Repository Contents
 
 - `convert-dnaera.js` - standalone Node.js CLI converter
+- `email-to-dnaera-support-sk.md` - Slovak email template requesting the manifest or mapping table from DNAEra support
 - `mapping/getbased-dnaera-map.json` - compact mapping focused on getbased's curated SNP set
 - `samples/dnaera-mini.txt` - small fixture for local testing
 - `GSA-24v3-0_A1_b151_rsids.txt` - unpacked public Illumina loci-to-rsID file
