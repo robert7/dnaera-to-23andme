@@ -7,6 +7,7 @@ This project is a best-effort compatibility bridge, not a vendor-certified full-
 ## Status And Limits
 
 - This repo provides a standalone converter, not changes to getbased or DNAEra.
+- Its primary objective is to make DNAEra raw exports importable into the getbased app: `https://app.getbased.health/`
 - It emits 23andMe-style tab-separated output with DNAEra metadata preserved as comments.
 - It is optimized for the SNPs getbased actually imports, not for perfect reconstruction of the full DNAEra array.
 - The exact custom manifest named in the DNAEra export header has not been downloaded into this repo.
@@ -15,10 +16,16 @@ This project is a best-effort compatibility bridge, not a vendor-certified full-
 
 ## Objectives
 
+- Primary objective: make DNAEra raw exports importable into the getbased app without changing getbased itself.
 - Convert DNAEra raw exports into a format that getbased already supports.
 - Avoid modifying the getbased app itself.
 - Preserve useful source metadata from DNAEra exports.
 - Make the mapping assumptions and risks explicit.
+
+Related getbased links:
+
+- App: `https://app.getbased.health/`
+- Repository: `https://github.com/elkimek/get-based`
 
 ## What We Found
 
