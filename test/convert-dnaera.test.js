@@ -36,6 +36,13 @@ test('parseCsvLine handles quoted commas and escaped quotes', () => {
   );
 });
 
+test('toCsvLine escapes commas and quotes', () => {
+  assert.equal(
+    converter.toCsvLine(['alpha', 'beta,gamma', 'delta "quoted"']),
+    'alpha,"beta,gamma","delta ""quoted"""'
+  );
+});
+
 test('normalizers handle whitespace and chromosome prefixes', () => {
   assert.equal(converter.normalizeAllele(' a '), 'A');
   assert.equal(converter.normalizeChromosome('chr19'), '19');
@@ -100,6 +107,29 @@ test('buildOutput emits 23andMe-style text and tracks stats', () => {
   );
 });
 
+test('buildFilteredInputSubset keeps original DNAEra shape for relevant rows', () => {
+  const parsed = converter.parseDNAEraFile(sampleInput);
+  const filtered = converter.buildFilteredInputSubset(parsed, mapping);
+
+  assert.equal(filtered.relevantRows.length, 5);
+  assert.match(filtered.text, /^\[Header\]/);
+  assert.match(filtered.text, /^Sample Name,SNP Name,Chr,Position,Allele1 - Plus,Allele2 - Plus$/m);
+  assert.match(filtered.text, /^41220311706341,19:45411941,19,45411941,T,C$/m);
+  assert.doesNotMatch(filtered.text, /^41220311706341,1:110229816_CNV_GSTM1,1,110229816,-,-$/m);
+  assert.ok(filtered.text.includes('[Header]\nGSGT Version,2.0.5'));
+});
+
+test('deriveFilteredOutputPath uses input file stem', () => {
+  assert.equal(
+    converter.deriveFilteredOutputPath('/tmp/DNAEra-orig-41220311706341.csv'),
+    '/tmp/DNAEra-orig-41220311706341-filtered-target-snps.csv'
+  );
+  assert.equal(
+    converter.deriveFilteredOutputPath('/tmp/DNAEra-orig-41220311706341'),
+    '/tmp/DNAEra-orig-41220311706341-filtered-target-snps.csv'
+  );
+});
+
 test('buildOutput prefers direct name matches over coordinate fallback and records conflicts', () => {
   const parsed = {
     metadata: {},
@@ -148,15 +178,23 @@ test('CLI writes stdout output for sample fixture', () => {
 
 test('CLI writes output file and help exits successfully', () => {
   const scriptPath = path.join(__dirname, '..', 'convert-dnaera.js');
-  const samplePath = path.join(__dirname, '..', 'samples', 'dnaera-mini.txt');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dnaera-to-23andme-'));
+  const samplePath = path.join(tempDir, 'dnaera-mini.txt');
+  fs.writeFileSync(samplePath, sampleInput, 'utf8');
   const outputPath = path.join(tempDir, 'output.txt');
+  const filteredPath = path.join(tempDir, 'dnaera-mini-filtered-target-snps.csv');
 
   const writeResult = spawnSync(process.execPath, [scriptPath, samplePath, outputPath], { encoding: 'utf8' });
   assert.equal(writeResult.status, 0, writeResult.stderr);
   assert.equal(fs.existsSync(outputPath), true);
+  assert.equal(fs.existsSync(filteredPath), true);
   const written = fs.readFileSync(outputPath, 'utf8');
+  const filteredWritten = fs.readFileSync(filteredPath, 'utf8');
   assert.match(written, /rs429358\t19\t45411941\tTC/);
+  assert.match(filteredWritten, /^\[Data\]/m);
+  assert.doesNotMatch(filteredWritten, /Filtered Rows,/);
+  assert.match(filteredWritten, /^41220311706341,rs7412,19,45412079,C,C$/m);
+  assert.match(writeResult.stderr, /Filtered source rows written: 5 to/);
 
   const helpResult = spawnSync(process.execPath, [scriptPath, '--help'], { encoding: 'utf8' });
   assert.equal(helpResult.status, 0);

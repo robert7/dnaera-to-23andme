@@ -23,7 +23,9 @@ if [[ "${INPUT_STEM}" == "${INPUT_NAME}" ]]; then
 fi
 
 OUTPUT_PATH="${INPUT_DIR}/${INPUT_STEM}-converted-23andme.txt"
+FILTERED_PATH="${INPUT_DIR}/${INPUT_STEM}-filtered-target-snps.csv"
 
 node "${SCRIPT_DIR}/convert-dnaera.js" "${INPUT_PATH}" "${OUTPUT_PATH}"
 
 echo "Created: ${OUTPUT_PATH}"
+echo "Created: ${FILTERED_PATH}"

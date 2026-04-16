@@ -84,6 +84,16 @@ function parseCsvLine(line) {
   return fields;
 }
 
+function toCsvLine(values) {
+  return values.map((value) => {
+    const text = String(value ?? '');
+    if (/[",\n\r]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+    return text;
+  }).join(',');
+}
+
 function normalizeAllele(value) {
   return String(value || '').trim().toUpperCase();
 }
@@ -109,6 +119,7 @@ function parseDNAEraFile(content) {
   const metadata = {};
   const metadataLines = [];
   const rows = [];
+  let dataHeaderLine = null;
   let inHeader = false;
   let inData = false;
   let dataColumns = null;
@@ -139,13 +150,14 @@ function parseDNAEraFile(content) {
     }
 
     if (inData && !dataColumns) {
+      dataHeaderLine = rawLine;
       dataColumns = parseCsvLine(line).map(part => part.trim());
       continue;
     }
 
     if (inData && dataColumns) {
       const values = parseCsvLine(line);
-      const row = {};
+      const row = { __rawLine: rawLine };
       dataColumns.forEach((column, index) => {
         row[column] = (values[index] || '').trim();
       });
@@ -153,7 +165,7 @@ function parseDNAEraFile(content) {
     }
   }
 
-  return { metadata, metadataLines, rows };
+  return { metadata, metadataLines, rows, dataColumns, dataHeaderLine };
 }
 
 function resolveRsid(row, mapping) {
@@ -277,6 +289,34 @@ function buildOutput(parsed, mapping) {
   };
 }
 
+function buildFilteredInputSubset(parsed, mapping) {
+  const targetSet = new Set(mapping.targetRsids);
+  const relevantRows = parsed.rows.filter((row) => {
+    const resolved = resolveRsid(row, mapping);
+    return resolved && targetSet.has(resolved.rsid);
+  });
+
+  const headerLines = [
+    '[Header]',
+    ...parsed.metadataLines,
+    '[Data]',
+    parsed.dataHeaderLine || toCsvLine(parsed.dataColumns || []),
+  ];
+
+  const dataLines = relevantRows.map((row) => row.__rawLine || toCsvLine((parsed.dataColumns || []).map((column) => row[column] || '')));
+
+  return {
+    text: `${[...headerLines, ...dataLines].join('\n')}\n`,
+    relevantRows,
+  };
+}
+
+function deriveFilteredOutputPath(inputPath) {
+  const ext = path.extname(inputPath);
+  const base = ext ? inputPath.slice(0, -ext.length) : inputPath;
+  return `${base}-filtered-target-snps.csv`;
+}
+
 function main() {
   return runCli(process.argv.slice(2));
 }
@@ -293,12 +333,20 @@ function runCli(argv) {
       process.stdout.write(result.text);
     } else {
       fs.writeFileSync(args.outputPath, result.text, 'utf8');
+      const filteredOutputPath = deriveFilteredOutputPath(args.inputPath);
+      const filtered = buildFilteredInputSubset(parsed, mapping);
+      fs.writeFileSync(filteredOutputPath, filtered.text, 'utf8');
+      result.filteredOutputPath = filteredOutputPath;
+      result.filteredRowCount = filtered.relevantRows.length;
     }
 
     const destination = args.stdout ? 'stdout' : args.outputPath;
     console.error(`Converted ${result.matchedEntries.length} target SNPs to ${destination}`);
     console.error(`Direct name matches: ${result.stats.directName}`);
     console.error(`Coordinate fallback matches: ${result.stats.coordinateFallback}`);
+    if (!args.stdout) {
+      console.error(`Filtered source rows written: ${result.filteredRowCount} to ${result.filteredOutputPath}`);
+    }
     if (result.missingTargets.length) {
       console.error(`Missing targets (${result.missingTargets.length}): ${result.missingTargets.join(', ')}`);
     }
@@ -316,7 +364,9 @@ function runCli(argv) {
 module.exports = {
   DEFAULT_MAPPING_PATH,
   buildOutput,
+  buildFilteredInputSubset,
   chromosomeSortValue,
+  deriveFilteredOutputPath,
   main,
   normalizeAllele,
   normalizeChromosome,
@@ -326,6 +376,7 @@ module.exports = {
   printUsage,
   resolveRsid,
   runCli,
+  toCsvLine,
 };
 
 if (require.main === module) {
