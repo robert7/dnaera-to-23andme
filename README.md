@@ -7,8 +7,8 @@ This project is a best-effort compatibility bridge, not a vendor-certified full-
 
 Target application:
 
-- getbased app: `https://app.getbased.health/`
-- getbased repository: `https://github.com/elkimek/get-based`
+- getbased app: [https://app.getbased.health/](https://app.getbased.health/)
+- getbased repository: [https://github.com/elkimek/get-based](https://github.com/elkimek/get-based)
 
 ## Quick Start
 
