@@ -1,0 +1,5 @@
+tmp/
+samples/*-converted-23andme.txt
+samples/*-filtered-target-snps.csv
+samples/*-validation-prompt-1.md
+samples/*-validation-prompt-2.md

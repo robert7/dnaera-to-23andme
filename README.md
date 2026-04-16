@@ -51,6 +51,14 @@ Convert a DNAEra export with the shell wrapper:
 ./conversion.sh ~/Downloads/dna-files/DNAEra-orig-12345.csv
 ```
 
+For a quick local smoke test, you can use the included sample fixture:
+
+```bash
+./conversion.sh samples/dnaera-mini.txt
+```
+
+The repo intentionally keeps only [`samples/dnaera-mini.txt`](samples/dnaera-mini.txt) under `samples/`; generated outputs from that sample are ignored.
+
 This creates:
 
 ```text
