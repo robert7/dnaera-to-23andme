@@ -243,7 +243,7 @@ Illumina public GSA v3 A1 manifest CSV:
 
 We found a public metadata page referencing the exact DNAEra header identifier:
 
-- `https://42basepairs.com/browse/gs/broad-public-datasets/IlluminaGenotypingArrays/metadata/GSAMD-24v3-0-EA_20034606_A1`
+- https://42basepairs.com/browse/gs/broad-public-datasets/IlluminaGenotypingArrays/metadata/GSAMD-24v3-0-EA_20034606_A1
 
 Why it matters:
 
@@ -256,6 +256,18 @@ Why it is not included in this repo:
   - `UserProjectMissing`
 
 So the exact `GSAMD` custom manifest remains the preferred technical source, but not the artifact currently available in this repo.
+
+Also tried: https://42basepairs.com/search?query=GSAMD-24v3-0-EA_20034606_A1
+
+https://42basepairs.com/search?query=GSAMD-24v3-0-EA_20034606_A1&file=GSAMD-24v3-0-EA_20034606_A1.2.0.extended.csv&preview=
+
+result:
+
+```text
+GSAMD-24v3-0-EA_20034606_A1.2.0.extended.csv
+
+Could not preview this file: Error: Couldn't load https://42basepairs.com/download/gs/broad-public-datasets/IlluminaGenotypingArrays/metadata/GSAMD-24v3-0-EA_20034606_A1/GSAMD-24v3-0-EA_20034606_A1.2.0.extended.csv. Status: 400
+```
 
 ## Coverage
 
