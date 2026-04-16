@@ -3,7 +3,7 @@
 Standalone converter that turns [DNAEra](https://dnaera.com/cs/o-nas/) raw exports into 23andMe-style raw data files so tools
 with existing 23andMe import support can ingest them without code changes.
 
-This project is a **best-effort compatibility bridge**, not a vendor-certified full-genome transcode. DNAEra does not publicly disclose the rsID mapping layer behind its raw exports, so this repo uses the exact manifest identifier found in the exported file header (`GSAMD-24v3-0-EA_20034606_A1.bpm`) plus public Illumina GSA v3 mapping files and targeted GRCh37 coordinate fallbacks. It is currently designed around the [getbased](https://getbased.health/) import use case and can **recover 41 of the 42 curated SNPs used there**; `rs8175347` is intentionally omitted.
+This project is a **best-effort compatibility bridge**, not a vendor-certified full-genome transcode. DNAEra does not publicly disclose the rsID mapping layer behind its raw exports, so this repo uses the exact manifest identifier found in the exported file header (`GSAMD-24v3-0-EA_20034606_A1.bpm`) plus public Illumina GSA v3 mapping files and targeted GRCh37 coordinate fallbacks. It is currently designed around the [getbased](https://getbased.health/) import use case and can **recover 41 of the 42 curated SNPs used there**; `rs8175347` is intentionally omitted. A possible user-side validation workflow is documented in [VALIDATION.md](VALIDATION.md).
 
 Target application:
 
@@ -248,6 +248,7 @@ Coverage policy in this repo:
 - `convert-dnaera.js` - standalone Node.js CLI converter
 - `conversion.sh` - short shell wrapper that converts one DNAEra export and writes both `<original-name>-converted-23andme.txt` and `<original-name>-filtered-target-snps.csv`
 - [email-to-dnaera-support-sk.md](email-to-dnaera-support-sk.md) - Slovak email template requesting the manifest or mapping table from DNAEra support
+- [VALIDATION.md](VALIDATION.md) - step-by-step manual for validating the conversion process with the filtered source subset and converted output
 - `package.json` - zero-dependency Node.js scripts for tests and coverage
 - `mapping/getbased-dnaera-map.json` - compact mapping focused on getbased's curated SNP set
 - `samples/dnaera-mini.txt` - small fixture for local testing
