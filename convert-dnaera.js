@@ -47,8 +47,8 @@ function parseArgs(argv) {
 function printUsage(exitCode) {
   const usage = [
     'Usage:',
-    '  node DNAEra-conversion/convert-dnaera.js <input> [output]',
-    '  node DNAEra-conversion/convert-dnaera.js <input> --stdout',
+    '  node convert-dnaera.js <input> [output]',
+    '  node convert-dnaera.js <input> --stdout',
     '',
     'Options:',
     '  --mapping <file>   Override the default compact mapping JSON',
@@ -278,8 +278,12 @@ function buildOutput(parsed, mapping) {
 }
 
 function main() {
+  return runCli(process.argv.slice(2));
+}
+
+function runCli(argv) {
   try {
-    const args = parseArgs(process.argv.slice(2));
+    const args = parseArgs(argv);
     const mapping = JSON.parse(fs.readFileSync(args.mappingPath, 'utf8'));
     const content = fs.readFileSync(args.inputPath, 'utf8');
     const parsed = parseDNAEraFile(content);
@@ -302,10 +306,28 @@ function main() {
       console.error(`Conflicts (${result.stats.conflicts.length}):`);
       result.stats.conflicts.forEach(conflict => console.error(`  - ${conflict}`));
     }
+    return result;
   } catch (error) {
     console.error(error.message);
     process.exit(1);
   }
 }
 
-main();
+module.exports = {
+  DEFAULT_MAPPING_PATH,
+  buildOutput,
+  chromosomeSortValue,
+  main,
+  normalizeAllele,
+  normalizeChromosome,
+  parseArgs,
+  parseCsvLine,
+  parseDNAEraFile,
+  printUsage,
+  resolveRsid,
+  runCli,
+};
+
+if (require.main === module) {
+  main();
+}

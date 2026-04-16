@@ -1,0 +1,10 @@
+{
+  "name": "dnaera-to-23andme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone converter that turns DNAEra raw exports into 23andMe-style raw data files.",
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=convert-dnaera.js --test-coverage-lines=85 --test-coverage-functions=85 --test-coverage-branches=85"
+  }
+}

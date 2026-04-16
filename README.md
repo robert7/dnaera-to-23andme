@@ -9,6 +9,22 @@ Target application:
 - getbased app: `https://app.getbased.health/`
 - getbased repository: `https://github.com/elkimek/get-based`
 
+## Quick Start
+
+Convert a DNAEra export with the shell wrapper:
+
+```bash
+./conversion.sh ~/Downloads/dna-files/DNAEra-orig-12345.csv
+```
+
+This creates:
+
+```text
+~/Downloads/dna-files/DNAEra-orig-12345-converted-23andme.txt
+```
+
+The wrapper calls `convert-dnaera.js` and automatically derives the output filename in the same directory as the input file.
+
 ## Status And Limits
 
 - This repo provides a standalone converter, not changes to getbased or DNAEra.
@@ -33,11 +49,11 @@ If you want a cleaner and more reliable conversion path, ask DNAEra support for 
 
 Included in this repo:
 
-- `email-to-dnaera-support-sk.md` - short polite Slovak email template requesting the manifest or mapping table
+- [email-to-dnaera-support-sk.md](email-to-dnaera-support-sk.md) - short polite Slovak email template requesting the manifest or mapping table
 
 Recommended request:
 
-- send the text in `email-to-dnaera-support-sk.md` to DNAEra support
+- send the text in [email-to-dnaera-support-sk.md](email-to-dnaera-support-sk.md) to DNAEra support
 - ask specifically for:
   - the manifest for the export format they provide
   - `SNP Name -> rsID` mapping
@@ -168,12 +184,34 @@ Override the mapping JSON:
 node convert-dnaera.js path/to/DNAEra-export.txt --mapping mapping/getbased-dnaera-map.json
 ```
 
+## Testing
+
+Run the test suite:
+
+```bash
+./code-quality.sh
+```
+
+Run the test suite with coverage thresholds:
+
+```bash
+npm run test:coverage
+```
+
+Coverage policy in this repo:
+
+- minimum `85%` for lines, functions, and branches on `convert-dnaera.js`
+
 ## Repository Contents
 
+- `AGENTS.md` - contributor guidance for future edits to this repo
 - `convert-dnaera.js` - standalone Node.js CLI converter
-- `email-to-dnaera-support-sk.md` - Slovak email template requesting the manifest or mapping table from DNAEra support
+- `conversion.sh` - short shell wrapper that converts one DNAEra export and writes `<original-name>-converted-23andme.txt`
+- [email-to-dnaera-support-sk.md](email-to-dnaera-support-sk.md) - Slovak email template requesting the manifest or mapping table from DNAEra support
+- `package.json` - zero-dependency Node.js scripts for tests and coverage
 - `mapping/getbased-dnaera-map.json` - compact mapping focused on getbased's curated SNP set
 - `samples/dnaera-mini.txt` - small fixture for local testing
+- `test/convert-dnaera.test.js` - Node.js test suite covering converter behavior and CLI output
 - `GSA-24v3-0_A1_b151_rsids.txt` - unpacked public Illumina loci-to-rsID file
 - `infinium-global-screening-array-24-v3-0-a1-b151-rsids.zip` - original downloaded Illumina rsID conversion zip
 - `GSA-24v3-0-A1-manifest-file-csv.zip` - public Illumina GSA v3 A1 manifest CSV zip
