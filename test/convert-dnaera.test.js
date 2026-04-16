@@ -130,6 +130,17 @@ test('deriveFilteredOutputPath uses input file stem', () => {
   );
 });
 
+test('deriveValidationPromptPaths use input file stem', () => {
+  assert.equal(
+    converter.deriveValidationPrompt1Path('/tmp/DNAEra-orig-41220311706341.csv'),
+    '/tmp/DNAEra-orig-41220311706341-validation-prompt-1.md'
+  );
+  assert.equal(
+    converter.deriveValidationPrompt2Path('/tmp/DNAEra-orig-41220311706341.csv'),
+    '/tmp/DNAEra-orig-41220311706341-validation-prompt-2.md'
+  );
+});
+
 test('buildOutput prefers direct name matches over coordinate fallback and records conflicts', () => {
   const parsed = {
     metadata: {},
@@ -165,6 +176,24 @@ test('buildOutput skips unmapped rows and rows with invalid coordinates', () => 
   assert.equal(result.stats.skippedUnmapped, 3);
 });
 
+test('buildValidationPrompt1 and buildValidationPrompt2 render actual file content', () => {
+  const parsed = converter.parseDNAEraFile(sampleInput);
+  const output = converter.buildOutput(parsed, mapping);
+  const filtered = converter.buildFilteredInputSubset(parsed, mapping);
+
+  const prompt1 = converter.buildValidationPrompt1(filtered.text, '/tmp/example-filtered-target-snps.csv');
+  const prompt2 = converter.buildValidationPrompt2(output.text, '/tmp/example-converted-23andme.txt');
+
+  assert.match(prompt1, /Source file: `\/tmp\/example-filtered-target-snps\.csv`/);
+  assert.match(prompt1, /Filtered DNAEra source subset:/);
+  assert.match(prompt1, /^```text$/m);
+  assert.match(prompt1, /^41220311706341,rs1801133,1,11856378,G,A$/m);
+
+  assert.match(prompt2, /Converted file: `\/tmp\/example-converted-23andme\.txt`/);
+  assert.match(prompt2, /Converted 23andMe-style file:/);
+  assert.match(prompt2, /^rs429358\t19\t45411941\tTC$/m);
+});
+
 test('CLI writes stdout output for sample fixture', () => {
   const scriptPath = path.join(__dirname, '..', 'convert-dnaera.js');
   const samplePath = path.join(__dirname, '..', 'samples', 'dnaera-mini.txt');
@@ -183,18 +212,30 @@ test('CLI writes output file and help exits successfully', () => {
   fs.writeFileSync(samplePath, sampleInput, 'utf8');
   const outputPath = path.join(tempDir, 'output.txt');
   const filteredPath = path.join(tempDir, 'dnaera-mini-filtered-target-snps.csv');
+  const prompt1Path = path.join(tempDir, 'dnaera-mini-validation-prompt-1.md');
+  const prompt2Path = path.join(tempDir, 'dnaera-mini-validation-prompt-2.md');
 
   const writeResult = spawnSync(process.execPath, [scriptPath, samplePath, outputPath], { encoding: 'utf8' });
   assert.equal(writeResult.status, 0, writeResult.stderr);
   assert.equal(fs.existsSync(outputPath), true);
   assert.equal(fs.existsSync(filteredPath), true);
+  assert.equal(fs.existsSync(prompt1Path), true);
+  assert.equal(fs.existsSync(prompt2Path), true);
   const written = fs.readFileSync(outputPath, 'utf8');
   const filteredWritten = fs.readFileSync(filteredPath, 'utf8');
+  const prompt1Written = fs.readFileSync(prompt1Path, 'utf8');
+  const prompt2Written = fs.readFileSync(prompt2Path, 'utf8');
   assert.match(written, /rs429358\t19\t45411941\tTC/);
   assert.match(filteredWritten, /^\[Data\]/m);
   assert.doesNotMatch(filteredWritten, /Filtered Rows,/);
   assert.match(filteredWritten, /^41220311706341,rs7412,19,45412079,C,C$/m);
+  assert.match(prompt1Written, /Filtered DNAEra source subset:/);
+  assert.match(prompt1Written, /^41220311706341,rs7412,19,45412079,C,C$/m);
+  assert.match(prompt2Written, /Converted 23andMe-style file:/);
+  assert.match(prompt2Written, /^rs429358\t19\t45411941\tTC$/m);
   assert.match(writeResult.stderr, /Filtered source rows written: 5 to/);
+  assert.match(writeResult.stderr, /Validation prompt 1 written:/);
+  assert.match(writeResult.stderr, /Validation prompt 2 written:/);
 
   const helpResult = spawnSync(process.execPath, [scriptPath, '--help'], { encoding: 'utf8' });
   assert.equal(helpResult.status, 0);

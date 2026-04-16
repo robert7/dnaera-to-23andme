@@ -125,11 +125,18 @@ This should produce:
 
 - `*-converted-23andme.txt`
 - `*-filtered-target-snps.csv`
+- `*-validation-prompt-1.md`
+- `*-validation-prompt-2.md`
 
 Prompt templates for the two AI-assisted validation steps are available here:
 
 - [validation-prompt-1.md](validation-prompt-1.md)
 - [validation-prompt-2.md](validation-prompt-2.md)
+
+In addition, the conversion process now renders two ready-to-paste prompt files with the actual contents of your generated files already embedded:
+
+- `*-validation-prompt-1.md`
+- `*-validation-prompt-2.md`
 
 ### Step 2: Give the filtered source subset to an AI
 
@@ -153,7 +160,7 @@ Ask the AI to classify each target SNP into one of these categories:
 - present but not callable
 - not recovered
 
-You can start from [validation-prompt-1.md](validation-prompt-1.md).
+You can start from the rendered `*-validation-prompt-1.md` file produced by the converter, or from the generic template [validation-prompt-1.md](validation-prompt-1.md).
 
 ### Step 4: Compare against the converted 23andMe-style file
 
@@ -166,7 +173,7 @@ Then ask the AI to compare:
 - the SNPs it recovered from the filtered DNAEra source subset
 - against the SNPs present in the converted 23andMe-style output
 
-You can continue with [validation-prompt-2.md](validation-prompt-2.md).
+You can continue with the rendered `*-validation-prompt-2.md` file produced by the converter, or from the generic template [validation-prompt-2.md](validation-prompt-2.md).
 
 ## What a good result looks like
 

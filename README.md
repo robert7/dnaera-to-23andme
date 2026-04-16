@@ -9,6 +9,39 @@ Target application:
 
 - getbased app: [https://app.getbased.health/](https://app.getbased.health/)
 - getbased repository: [https://github.com/elkimek/get-based](https://github.com/elkimek/get-based)
+- relevant getbased DNA docs: [docs/guide/dna-import.md](https://github.com/elkimek/get-based/blob/main/docs/guide/dna-import.md)
+
+Target SNP set used by getbased and by this converter:
+
+Methylation:
+`rs1801131`, `rs1801133`, `rs1801394`, `rs1805087`, `rs234706`, `rs3733890`
+
+Iron:
+`rs1799945`, `rs1800562`, `rs2235321`, `rs3811647`, `rs855791`
+
+Lipids:
+`rs11591147`, `rs1800588`, `rs429358`, `rs708272`, `rs7412`
+
+Vitamin D:
+`rs10741657`, `rs10877012`, `rs2228570`, `rs2282679`
+
+Vitamin B12:
+`rs1801198`, `rs1801222`, `rs526934`, `rs601338`
+
+Bilirubin:
+`rs4148323`, `rs8175347`
+
+Thyroid:
+`rs11206244`, `rs179247`, `rs225014`
+
+Fatty acids:
+`rs174546`, `rs174547`, `rs174575`, `rs953413`
+
+Blood sugar:
+`rs1501299`, `rs1801282`, `rs2241766`, `rs7903146`
+
+Sex hormones:
+`rs1056836`, `rs1799941`, `rs6257`, `rs700518`, `rs743572`
 
 ## Quick Start
 
@@ -23,11 +56,15 @@ This creates:
 ```text
 ~/Downloads/dna-files/DNAEra-orig-12345-converted-23andme.txt
 ~/Downloads/dna-files/DNAEra-orig-12345-filtered-target-snps.csv
+~/Downloads/dna-files/DNAEra-orig-12345-validation-prompt-1.md
+~/Downloads/dna-files/DNAEra-orig-12345-validation-prompt-2.md
 ```
 
-The wrapper calls `convert-dnaera.js` and automatically derives both output filenames in the same directory as the input file.
+The wrapper calls `convert-dnaera.js` and automatically derives all output filenames in the same directory as the input file.
 
 The second artifact is a filtered DNAEra-style source subset containing only the rows relevant to the 42 target SNPs used by getbased. Its kept data rows are `1:1` copies of the original DNAEra source lines, so it can be used as a validation layer.
+
+The third and fourth artifacts are AI-ready validation prompts with the actual filtered and converted file contents already embedded for copy/paste use.
 
 ## Status And Limits
 
@@ -158,7 +195,7 @@ This is a pragmatic bridge for downstream compatibility. It should not be descri
 
 ### Output format
 
-The converter writes two artifacts:
+The converter writes four artifacts:
 
 1. A 23andMe-style text file:
 
@@ -187,6 +224,16 @@ This is also deliberate:
 - the filtered CSV preserves only the original DNAEra rows that are relevant to the 42 target SNPs
 - the kept data rows are copied directly from the input file rather than reconstructed
 - conflicting duplicates are kept in the filtered CSV if they map to a target SNP, so the validation slice is not silently simplified
+
+3. A rendered validation prompt for step 1:
+
+- `*-validation-prompt-1.md`
+- contains the actual `*-filtered-target-snps.csv` content embedded into an AI prompt
+
+4. A rendered validation prompt for step 2:
+
+- `*-validation-prompt-2.md`
+- contains the actual `*-converted-23andme.txt` content embedded into an AI prompt
 
 That matches the existing import pattern expected by getbased.
 
@@ -246,10 +293,12 @@ Coverage policy in this repo:
 
 - `AGENTS.md` - contributor guidance for future edits to this repo
 - `convert-dnaera.js` - standalone Node.js CLI converter
-- `conversion.sh` - short shell wrapper that converts one DNAEra export and writes both `<original-name>-converted-23andme.txt` and `<original-name>-filtered-target-snps.csv`
+- `conversion.sh` - short shell wrapper that converts one DNAEra export and writes four derived output files
 - [email-to-dnaera-support-sk.md](email-to-dnaera-support-sk.md) - Slovak email template requesting the manifest or mapping table from DNAEra support
 - [VALIDATION.md](VALIDATION.md) - step-by-step manual for validating the conversion process with the filtered source subset and converted output
 - `package.json` - zero-dependency Node.js scripts for tests and coverage
+- [validation-prompt-1.md](validation-prompt-1.md) - generic template for the first AI-assisted validation step
+- [validation-prompt-2.md](validation-prompt-2.md) - generic template for the second AI-assisted validation step
 - `mapping/getbased-dnaera-map.json` - compact mapping focused on getbased's curated SNP set
 - `samples/dnaera-mini.txt` - small fixture for local testing
 - `test/convert-dnaera.test.js` - Node.js test suite covering converter behavior and CLI output

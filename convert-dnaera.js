@@ -4,6 +4,37 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_MAPPING_PATH = path.join(__dirname, 'mapping', 'getbased-dnaera-map.json');
+const TARGET_SNP_LIST_TEXT = [
+  'Methylation:',
+  '`rs1801131`, `rs1801133`, `rs1801394`, `rs1805087`, `rs234706`, `rs3733890`',
+  '',
+  'Iron:',
+  '`rs1799945`, `rs1800562`, `rs2235321`, `rs3811647`, `rs855791`',
+  '',
+  'Lipids:',
+  '`rs11591147`, `rs1800588`, `rs429358`, `rs708272`, `rs7412`',
+  '',
+  'Vitamin D:',
+  '`rs10741657`, `rs10877012`, `rs2228570`, `rs2282679`',
+  '',
+  'Vitamin B12:',
+  '`rs1801198`, `rs1801222`, `rs526934`, `rs601338`',
+  '',
+  'Bilirubin:',
+  '`rs4148323`, `rs8175347`',
+  '',
+  'Thyroid:',
+  '`rs11206244`, `rs179247`, `rs225014`',
+  '',
+  'Fatty acids:',
+  '`rs174546`, `rs174547`, `rs174575`, `rs953413`',
+  '',
+  'Blood sugar:',
+  '`rs1501299`, `rs1801282`, `rs2241766`, `rs7903146`',
+  '',
+  'Sex hormones:',
+  '`rs1056836`, `rs1799941`, `rs6257`, `rs700518`, `rs743572`',
+].join('\n');
 
 function parseArgs(argv) {
   const args = {
@@ -317,6 +348,139 @@ function deriveFilteredOutputPath(inputPath) {
   return `${base}-filtered-target-snps.csv`;
 }
 
+function deriveValidationPrompt1Path(inputPath) {
+  const ext = path.extname(inputPath);
+  const base = ext ? inputPath.slice(0, -ext.length) : inputPath;
+  return `${base}-validation-prompt-1.md`;
+}
+
+function deriveValidationPrompt2Path(inputPath) {
+  const ext = path.extname(inputPath);
+  const base = ext ? inputPath.slice(0, -ext.length) : inputPath;
+  return `${base}-validation-prompt-2.md`;
+}
+
+function buildValidationPrompt1(filteredText, filteredPath) {
+  return [
+    '# Validation Prompt 1',
+    '',
+    'Copy and paste everything below into your AI model.',
+    '',
+    'Please review the following filtered DNAEra source subset.',
+    '',
+    `Source file: \`${filteredPath}\``,
+    '',
+    'This file is a filtered subset of an original DNAEra raw export. It contains only the original source rows relevant to the curated set of 42 target SNPs used by getbased.',
+    '',
+    'Use only:',
+    '',
+    '- this filtered DNAEra source subset',
+    '- the target SNP list below',
+    '',
+    'Do **not** use any converted 23andMe-style file yet.',
+    'Do **not** infer markers that are not supported by the provided source lines.',
+    'Do **not** provide medical interpretation.',
+    'Do **not** disclose personal genotype values in the summary unless explicitly asked.',
+    '',
+    'The 42 target SNPs are:',
+    '',
+    TARGET_SNP_LIST_TEXT,
+    '',
+    'For each target SNP, classify it into exactly one of these categories:',
+    '',
+    '- directly detected',
+    '- detected after normalization or alias mapping',
+    '- present but not callable',
+    '- not recovered',
+    '',
+    'Special note:',
+    '',
+    '- `rs8175347` is a repeat polymorphism and may need to be treated as a special case rather than as a standard simple SNP',
+    '',
+    'Please return:',
+    '',
+    '1. A table with one row per target SNP',
+    '   Columns:',
+    '   - SNP',
+    '   - category',
+    '   - short explanation',
+    '',
+    '2. A short summary with:',
+    '   - number directly detected',
+    '   - number detected after normalization or alias mapping',
+    '   - number present but not callable',
+    '   - number not recovered',
+    '',
+    '3. A final section titled `Recovered subset for cross-format comparison`',
+    '   Include only the SNP identifiers that you believe are sufficiently recovered/callable to compare against a converted 23andMe-style file in the next step.',
+    '',
+    'Filtered DNAEra source subset:',
+    '',
+    '```text',
+    filteredText.trimEnd(),
+    '```',
+    '',
+  ].join('\n');
+}
+
+function buildValidationPrompt2(convertedText, convertedPath) {
+  return [
+    '# Validation Prompt 2',
+    '',
+    'Copy and paste everything below into your AI model after completing validation prompt 1.',
+    '',
+    'Now compare the recovered callable target SNP subset from step 1 against the converted 23andMe-style file below.',
+    '',
+    `Converted file: \`${convertedPath}\``,
+    '',
+    'Use:',
+    '',
+    '- your conclusions from the previous step based on the filtered DNAEra source subset',
+    '- the converted 23andMe-style file below',
+    '',
+    'Do **not** infer loci outside the curated target set.',
+    'Do **not** provide medical interpretation.',
+    'Do **not** disclose personal genotype values in the summary unless explicitly asked.',
+    '',
+    'Please check:',
+    '',
+    '- whether the same callable target loci are present in the converted file',
+    '- whether the calls are concordant at the marker level',
+    '- whether any differences are explained by no-calls, normalization limits, repeat-polymorphism handling, or markers unsuitable for simple rsID output',
+    '',
+    'Special note:',
+    '',
+    '- `rs8175347` should be treated as a special case and should not be judged by the same standard as ordinary simple SNP calls',
+    '',
+    'Please return:',
+    '',
+    '1. A comparison summary with:',
+    '   - callable target SNPs recovered from the filtered DNAEra subset',
+    '   - how many of those are present in the converted file',
+    '   - how many are concordant',
+    '   - how many differ',
+    '',
+    '2. A short list of any discrepancies',
+    '   For each discrepancy, explain whether it appears to be:',
+    '   - a likely conversion problem',
+    '   - an acceptable no-call / unsupported-marker case',
+    '   - a special-case marker issue',
+    '',
+    '3. A final verdict in plain language',
+    '   Example style:',
+    '   - very strong match',
+    '   - good match with a few explainable exceptions',
+    '   - mixed result requiring manual review',
+    '',
+    'Converted 23andMe-style file:',
+    '',
+    '```text',
+    convertedText.trimEnd(),
+    '```',
+    '',
+  ].join('\n');
+}
+
 function main() {
   return runCli(process.argv.slice(2));
 }
@@ -336,8 +500,14 @@ function runCli(argv) {
       const filteredOutputPath = deriveFilteredOutputPath(args.inputPath);
       const filtered = buildFilteredInputSubset(parsed, mapping);
       fs.writeFileSync(filteredOutputPath, filtered.text, 'utf8');
+      const prompt1Path = deriveValidationPrompt1Path(args.inputPath);
+      const prompt2Path = deriveValidationPrompt2Path(args.inputPath);
+      fs.writeFileSync(prompt1Path, buildValidationPrompt1(filtered.text, filteredOutputPath), 'utf8');
+      fs.writeFileSync(prompt2Path, buildValidationPrompt2(result.text, args.outputPath), 'utf8');
       result.filteredOutputPath = filteredOutputPath;
       result.filteredRowCount = filtered.relevantRows.length;
+      result.validationPrompt1Path = prompt1Path;
+      result.validationPrompt2Path = prompt2Path;
     }
 
     const destination = args.stdout ? 'stdout' : args.outputPath;
@@ -346,6 +516,8 @@ function runCli(argv) {
     console.error(`Coordinate fallback matches: ${result.stats.coordinateFallback}`);
     if (!args.stdout) {
       console.error(`Filtered source rows written: ${result.filteredRowCount} to ${result.filteredOutputPath}`);
+      console.error(`Validation prompt 1 written: ${result.validationPrompt1Path}`);
+      console.error(`Validation prompt 2 written: ${result.validationPrompt2Path}`);
     }
     if (result.missingTargets.length) {
       console.error(`Missing targets (${result.missingTargets.length}): ${result.missingTargets.join(', ')}`);
@@ -365,8 +537,12 @@ module.exports = {
   DEFAULT_MAPPING_PATH,
   buildOutput,
   buildFilteredInputSubset,
+  buildValidationPrompt1,
+  buildValidationPrompt2,
   chromosomeSortValue,
   deriveFilteredOutputPath,
+  deriveValidationPrompt1Path,
+  deriveValidationPrompt2Path,
   main,
   normalizeAllele,
   normalizeChromosome,

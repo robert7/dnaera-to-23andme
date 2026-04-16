@@ -24,8 +24,12 @@ fi
 
 OUTPUT_PATH="${INPUT_DIR}/${INPUT_STEM}-converted-23andme.txt"
 FILTERED_PATH="${INPUT_DIR}/${INPUT_STEM}-filtered-target-snps.csv"
+PROMPT1_PATH="${INPUT_DIR}/${INPUT_STEM}-validation-prompt-1.md"
+PROMPT2_PATH="${INPUT_DIR}/${INPUT_STEM}-validation-prompt-2.md"
 
 node "${SCRIPT_DIR}/convert-dnaera.js" "${INPUT_PATH}" "${OUTPUT_PATH}"
 
 echo "Created: ${OUTPUT_PATH}"
 echo "Created: ${FILTERED_PATH}"
+echo "Created: ${PROMPT1_PATH}"
+echo "Created: ${PROMPT2_PATH}"
